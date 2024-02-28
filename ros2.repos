@@ -1,7 +1,7 @@
 repositories:
   ira_laser_tools:
     type: git
-    url: https://github.com/relffok/ira_laser_tools.git
+    url: https://github.com/ATh0ft/ira_laser_tools.git
     version: galactic-devel
   twist_stamper:
     type: git
