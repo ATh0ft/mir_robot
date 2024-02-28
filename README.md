@@ -92,7 +92,7 @@ mkdir -p ~/ros2_ws/src
 cd ~/ros2_ws/
 
 # clone mir_robot into the ros2 workspace
-git clone -b humble-devel https://github.com/relffok/mir_robot src/mir_robot
+git clone -b humble-devel https://github.com/ATh0ft/mir_robot src/mir_robot
 
 # use vcs to fetch linked repos
 vcs import < src/mir_robot/ros2.repos src --recursive
