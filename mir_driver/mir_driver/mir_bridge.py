@@ -101,7 +101,7 @@ def _convert_ros_header(header_msg_dict, to_ros2):
     return header_dict
 
 
-def _prepend_tf_prefix_dict_filter(msg_dict):
+def _prepend_tf_prefix_dict_filter(msg_dict, node_handle):
     # filtered_msg_dict = copy.deepcopy(msg_dict)
     if not isinstance(msg_dict, dict):   # can happen during recursion
         return
@@ -120,11 +120,19 @@ def _prepend_tf_prefix_dict_filter(msg_dict):
                 pass   # value is not a dict
             except KeyError:
                 pass   # value doesn't have key 'frame_id'
+        if key == 'header':
+            try:
+                print(value['stamp'])
+                value['stamp']['secs'] = node_handle.get_clock().now().to_msg().sec
+                value['stamp']['nsecs'] = node_handle.get_clock().now().to_msg().nanosec
+                # value['stamp'] = node_handle.get_clock().now().to_msg()
+            except Exception as e:
+                print(e)
         elif isinstance(value, dict):
-            _prepend_tf_prefix_dict_filter(value)
+            _prepend_tf_prefix_dict_filter(value, node_handle)
         elif isinstance(value, Iterable):    # an Iterable other than dict (e.g., a list)
             for item in value:
-                _prepend_tf_prefix_dict_filter(item)
+                _prepend_tf_prefix_dict_filter(item, node_handle)
     return msg_dict
 
 
@@ -265,7 +273,7 @@ PUB_TOPICS = [
     #   dynamic_reconfigure.msg.ConfigDescription),
     # TopicConfig('move_base_node/local_costmap/parameter_updates',
     #   dynamic_reconfigure.msg.Config),
-    # TopicConfig('move_base_node/local_costmap/robot_footprint',
+    # TopicConfgit@github.com:ATh0ft/mir_robot.gitig('move_base_node/local_costmap/robot_footprint',
     #    geometry_msgs.msg.PolygonStamped),
     # TopicConfig('move_base_node/local_costmap/safety_zone', geometry_msgs.msg.PolygonStamped),
     # TopicConfig('move_base_node/local_costmap/unknown_space', nav_msgs.msg.GridCells),
@@ -367,18 +375,20 @@ class PublisherWrapper(object):
     def callback(self, msg_dict):
         if not isinstance(msg_dict, dict):   # can happen during recursion
             return
-        msg_dict = _prepend_tf_prefix_dict_filter(msg_dict)
+        msg_dict = _prepend_tf_prefix_dict_filter(msg_dict, self.node_handle)
         if self.topic_config.dict_filter is not None:
             msg_dict = self.topic_config.dict_filter(msg_dict, to_ros2=True)
         
+
         msg = message_converter.convert_dictionary_to_ros_message(
             self.topic_config.topic_type, msg_dict)
         
         #### trying to add new header timestamp
-        try:
-            msg.header.stamp = self.node_handle.get_time().now().to_msg()
-        except Exception as e:
-            print(f"got error trying to override the time stamp {e} {e.args}")
+        # try:
+        #     msg.header.stamp = self.node_handle.get_clock().now().to_msg()
+        # except Exception as e:
+        #     print(f"got error trying to override the time stamp {e} {e.args}")
+        #     pass
 
         self.pub.publish(msg)
 
