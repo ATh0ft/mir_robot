@@ -16,6 +16,9 @@ from sensor_msgs.msg import LaserScan
 from tf2_msgs.msg import TFMessage
 from std_srvs.srv import Trigger
 
+import rclpy.time
+
+
 tf_prefix = ''
 
 
@@ -331,6 +334,7 @@ SUB_TOPICS = [
 
 class PublisherWrapper(object):
     def __init__(self, topic_config, nh):
+        self.node_handle = nh
         self.topic_config = topic_config
         self.robot = nh.robot
         self.connected = False
@@ -366,8 +370,16 @@ class PublisherWrapper(object):
         msg_dict = _prepend_tf_prefix_dict_filter(msg_dict)
         if self.topic_config.dict_filter is not None:
             msg_dict = self.topic_config.dict_filter(msg_dict, to_ros2=True)
+        
         msg = message_converter.convert_dictionary_to_ros_message(
             self.topic_config.topic_type, msg_dict)
+        
+        #### trying to add new header timestamp
+        try:
+            msg.header.stamp = self.node_handle.get_time().now().to_msg()
+        except Exception as e:
+            print(f"got error trying to override the time stamp {e} {e.args}")
+
         self.pub.publish(msg)
 
 

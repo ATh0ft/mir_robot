@@ -47,12 +47,31 @@ bt_navigator:
     odom_topic: /odom
     bt_loop_duration: 10
     default_server_timeout: 20
-    # 'default_nav_through_poses_bt_xml' and 'default_nav_to_pose_bt_xml' are use defaults:
+    # default_nav_to_pose_bt_xml: "/src/mir_navigation/behavioe_trees/test_behavior_tree.xml"
+    # 'default_nav_through_poses_bt_xml' and 'default_nav_to_pose_bt_xml' are the varibles to set, the defauls are:
     # nav2_bt_navigator/navigate_to_pose_w_replanning_and_recovery.xml
     # nav2_bt_navigator/navigate_through_poses_w_replanning_and_recovery.xml
     # They can be set here or via a RewrittenYaml remap from a parent launch file to Nav2.
     #
     # Note: Not quite correct, params that are not mentioned can not be substituted!
+    #
+    #new aproach --------------------
+    # navigators: ['navigate_to_pose', 'navigate_through_poses']
+    # navigate_to_pose:
+      # plugin: "nav2_bt_navigator/NavigateToPoseNavigator"
+      # default_bt_xml_file_name: "nav2_bt_navigator/navigate_to_pose_w_replanning_and_recovery.xml"
+      # default_bt_xml_file_name: "~/work/ros_mir_ws/src/mir_robot/mir_navigation/behavior_trees/navigate_to_pose_w_replanning_and_recovery.xml"
+
+    # navigate_through_poses:
+      # plugin: "nav2_bt_navigator/NavigateThroughPosesNavigator"
+      # default_bt_xml_file_name: "nav2_bt_navigator/navigate_through_poses_w_replanning_and_recovery.xml"
+
+    # ----------------------------
+    # second new aproach
+    # the variable names should compare to those in the navigator cpp file 
+    # default_nav_to_pose_bt_xml: "~/work/ros_mir_ws/src/mir_robot/mir_navigation/behavior_trees/navigate_to_pose_w_replanning_and_recovery.xml"
+    default_nav_to_pose_bt_xml: "/home/a/work/ros_mir_ws/src/mir_robot/mir_navigation/behavior_trees/navigate_to_pose_w_replanning_and_recovery.xml"
+
     plugin_lib_names:
     - nav2_compute_path_to_pose_action_bt_node
     - nav2_compute_path_through_poses_action_bt_node
@@ -285,8 +304,8 @@ planner_server:
     GridBased:
       plugin: "drive_by_pickup_nav2_plugin/DriveBy"
       interpolation_resolution: 0.1
-        #plugin: "nav2_straightline_planner/StraightLine"
-        #interpolation_resolution: 0.1
+        # plugin: "nav2_straightline_planner/StraightLine"
+        # interpolation_resolution: 0.1
       # plugin: "nav2_navfn_planner/NavfnPlanner"
       # tolerance: 0.5
       # use_astar: false

@@ -39,8 +39,8 @@ def generate_launch_description():
     container_name_full = (namespace, '/', container_name)
     use_respawn = LaunchConfiguration('use_respawn')
     log_level = LaunchConfiguration('log_level')
-    default_nav_to_pose_bt_xml = LaunchConfiguration('default_nav_to_pose_bt_xml')
-    default_nav_through_pose_bt_xml = LaunchConfiguration('default_nav_through_pose_bt_xml')
+    # default_nav_to_pose_bt_xml = LaunchConfiguration('default_nav_to_pose_bt_xml')
+    # default_nav_through_pose_bt_xml = LaunchConfiguration('default_nav_through_pose_bt_xml')
 
     lifecycle_nodes = ['controller_server',
                        'smoother_server',
@@ -64,9 +64,9 @@ def generate_launch_description():
     # Create our own temporary YAML files that include substitutions
     param_substitutions = {
         'use_sim_time': use_sim_time,
-        'autostart': autostart,
-        'default_nav_to_pose_bt_xml': default_nav_to_pose_bt_xml,
-        'default_nav_through_poses_bt_xml': default_nav_through_pose_bt_xml
+        'autostart': autostart
+        # 'default_nav_to_pose_bt_xml': default_nav_to_pose_bt_xml,
+        # 'default_nav_through_poses_bt_xml': default_nav_through_pose_bt_xml
     }
 
     configured_params = RewrittenYaml(
