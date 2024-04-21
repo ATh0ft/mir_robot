@@ -38,6 +38,13 @@ class TopicConfig(object):
         else:
             self.qos_profile = qos_profile_system_default
 
+class TimeFilter():
+    def __init__(self):
+        self.prev_time = 0
+    def test_time(self, time):
+        result = time < self.prev_time
+        self.prev_time = time 
+        return result
 
 def _odom_dict_filter(msg_dict,  to_ros2):
     filtered_msg_dict = copy.deepcopy(msg_dict)
@@ -101,7 +108,7 @@ def _convert_ros_header(header_msg_dict, to_ros2):
     return header_dict
 
 
-def _prepend_tf_prefix_dict_filter(msg_dict, node_handle):
+def _prepend_tf_prefix_dict_filter(msg_dict, node_handle, time_filter):
     # filtered_msg_dict = copy.deepcopy(msg_dict)
     if not isinstance(msg_dict, dict):   # can happen during recursion
         return
@@ -121,18 +128,24 @@ def _prepend_tf_prefix_dict_filter(msg_dict, node_handle):
             except KeyError:
                 pass   # value doesn't have key 'frame_id'
         if key == 'header':
+            #trying to update the time stamp as the mir robot is often behind
             try:
-                print(value['stamp'])
+                # print(f"setting new time on {value['frame_id']}")
+                
+                if time_filter.test_time(value['stamp']['secs']):
+                    node_handle.get_logger().warn("the timings are mixed up from the MiR")
+                                
+                #print(value['stamp'])
                 value['stamp']['secs'] = node_handle.get_clock().now().to_msg().sec
                 value['stamp']['nsecs'] = node_handle.get_clock().now().to_msg().nanosec
                 # value['stamp'] = node_handle.get_clock().now().to_msg()
             except Exception as e:
                 print(e)
         elif isinstance(value, dict):
-            _prepend_tf_prefix_dict_filter(value, node_handle)
+            _prepend_tf_prefix_dict_filter(value, node_handle, time_filter)
         elif isinstance(value, Iterable):    # an Iterable other than dict (e.g., a list)
             for item in value:
-                _prepend_tf_prefix_dict_filter(item, node_handle)
+                _prepend_tf_prefix_dict_filter(item, node_handle, time_filter)
     return msg_dict
 
 
@@ -342,6 +355,7 @@ SUB_TOPICS = [
 
 class PublisherWrapper(object):
     def __init__(self, topic_config, nh):
+        self.time_filter = TimeFilter()
         self.node_handle = nh
         self.topic_config = topic_config
         self.robot = nh.robot
@@ -375,7 +389,7 @@ class PublisherWrapper(object):
     def callback(self, msg_dict):
         if not isinstance(msg_dict, dict):   # can happen during recursion
             return
-        msg_dict = _prepend_tf_prefix_dict_filter(msg_dict, self.node_handle)
+        msg_dict = _prepend_tf_prefix_dict_filter(msg_dict, self.node_handle, self.time_filter)
         if self.topic_config.dict_filter is not None:
             msg_dict = self.topic_config.dict_filter(msg_dict, to_ros2=True)
         
